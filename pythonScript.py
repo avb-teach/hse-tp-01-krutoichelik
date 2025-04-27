@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
-import shutil
 import sys
+import shutil
 
 src = sys.argv[1]
 dst = sys.argv[2]
@@ -12,31 +12,32 @@ if len(sys.argv) > 4 and sys.argv[3] == "--max_depth":
 
 src = os.path.abspath(src)
 dst = os.path.abspath(dst)
+os.makedirs(dst, exist_ok=True)
 
 for root, _, files in os.walk(src):
     rel = os.path.relpath(root, src)
-    parts = [] if rel == "." else rel.split(os.sep)
+    parts = rel.split(os.sep) if rel != "." else []
+    current_depth = len(parts)
 
     for name in files:
-        file_parts = parts + [name]
-        file_depth = len(file_parts)
+        full_parts = parts + [name]
 
-        if max_depth is not None and file_depth > max_depth:
-            keep_parts = file_parts[:max_depth]
-            sub_path = os.path.join(*keep_parts[:-1])
-            filename = keep_parts[-1]
+        if max_depth is not None and current_depth + 1 > max_depth:
+            keep = parts[:max_depth - 1]
+            rest = parts[max_depth - 1:]
+            path_parts = keep + rest
+            sub_path = os.path.join(*path_parts) if path_parts else ""
         else:
             sub_path = os.path.join(*parts) if parts else ""
-            filename = name
 
         outdir = os.path.join(dst, sub_path)
         os.makedirs(outdir, exist_ok=True)
 
-        dst_path = os.path.join(outdir, filename)
         src_path = os.path.join(root, name)
+        dst_path = os.path.join(outdir, name)
 
         if os.path.exists(dst_path):
-            base, ext = os.path.splitext(filename)
+            base, ext = os.path.splitext(name)
             i = 1
             while True:
                 alt_name = f"{base}_{i}{ext}"
